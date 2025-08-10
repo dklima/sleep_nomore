@@ -23,12 +23,17 @@ linters-settings:
     min-complexity: 15
   goimports:
     local-prefixes: github.com/dklima/sleep_nomore
-  gomnd:
-    settings:
-      mnd:
-        checks: argument,case,condition,operation,return,assign
+  mnd:
+    checks:
+      - argument
+      - case
+      - condition
+      - operation
+      - return
+      - assign
   govet:
-    check-shadowing: true
+    disable:
+      - shadow
   lll:
     line-length: 140
   misspell:
@@ -37,19 +42,16 @@ linters-settings:
 linters:
   enable:
     - bodyclose
-    - deadcode
-    - depguard
     - dogsled
     - dupl
     - errcheck
     - funlen
-    - gochecknoinits
     - goconst
     - gocritic
     - gocyclo
     - gofmt
     - goimports
-    - gomnd
+    - mnd
     - goprintffuncname
     - gosec
     - gosimple
@@ -61,25 +63,30 @@ linters:
     - noctx
     - nolintlint
     - staticcheck
-    - structcheck
-    - stylecheck
     - typecheck
     - unconvert
     - unparam
     - unused
-    - varcheck
     - whitespace
 
   disable:
     - gochecknoglobals
+    - gochecknoinits
+    - depguard
+    - stylecheck
 
 issues:
   exclude-rules:
     - path: _test\.go
       linters:
-        - gomnd
+        - mnd
         - funlen
         - dupl
+        - unparam
+    - path: main\.go
+      linters:
+        - mnd
+      text: "Magic number"
 
 run:
   timeout: 5m

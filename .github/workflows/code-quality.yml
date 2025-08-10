@@ -114,7 +114,7 @@ jobs:
       - name: Test coverage report
         run: |
           Write-Host "=== Test Coverage ==="
-          go test -v -short -coverprofile=coverage.out ./...
+          go test -v -short -coverprofile="coverage.out" ./...
           go tool cover -func=coverage.out | Select-String -Pattern "total:" | ForEach-Object {
             $coverage = $_ -replace '.*\s+(\d+\.\d+)%.*', '$1'
             Write-Host "Total coverage: $coverage%"

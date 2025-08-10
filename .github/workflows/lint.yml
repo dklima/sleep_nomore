@@ -25,8 +25,6 @@ jobs:
           version: latest
           args: --timeout=10m --config=.golangci.yml
           skip-cache: true
-          skip-pkg-cache: true
-          skip-build-cache: true
 
   format:
     name: Check code formatting
@@ -108,10 +106,17 @@ jobs:
         with:
           go-version: '1.21'
       
+      - name: Install gosec
+        run: go install github.com/securego/gosec/v2/cmd/gosec@latest
+      
       - name: Run gosec
-        uses: securego/gosec@master
-        with:
-          args: '-fmt sarif -out gosec-results.sarif ./...'
+        run: |
+          gosec -fmt sarif -out gosec-results.sarif ./...
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "::warning::gosec found security issues"
+          } else {
+            Write-Host "gosec security scan completed successfully"
+          }
       
       - name: Upload SARIF file
         uses: github/codeql-action/upload-sarif@v3

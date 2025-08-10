@@ -35,3 +35,6 @@ sleepnomore_*
 # Temporary files
 *.tmp
 *.log
+
+coverage.txt
+coverage
