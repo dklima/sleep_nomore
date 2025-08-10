@@ -1,0 +1,157 @@
+name: Lint
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  golangci:
+    name: Lint with golangci-lint
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+      
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          args: --timeout=10m --config=.golangci.yml
+          skip-cache: true
+          skip-pkg-cache: true
+          skip-build-cache: true
+
+  format:
+    name: Check code formatting
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: Check gofmt
+        run: |
+          $unformatted = gofmt -l .
+          if ($unformatted) {
+            Write-Host "::error::The following files are not formatted:"
+            $unformatted | ForEach-Object { Write-Host "::error file=$_::File needs formatting" }
+            exit 1
+          }
+          Write-Host "All files are properly formatted"
+      
+      - name: Check goimports
+        run: |
+          go install golang.org/x/tools/cmd/goimports@latest
+          $output = goimports -l .
+          if ($output) {
+            Write-Host "::error::The following files have import issues:"
+            $output | ForEach-Object { Write-Host "::error file=$_::File has import issues" }
+            exit 1
+          }
+          Write-Host "All imports are properly formatted"
+
+  vet:
+    name: Run go vet
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: Run go vet
+        run: |
+          go vet ./...
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "::error::go vet found issues"
+            exit 1
+          }
+          Write-Host "go vet passed successfully"
+
+  staticcheck:
+    name: Run staticcheck
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: Install staticcheck
+        run: go install honnef.co/go/tools/cmd/staticcheck@latest
+      
+      - name: Run staticcheck
+        run: staticcheck ./...
+
+  security:
+    name: Security scan with gosec
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: Run gosec
+        uses: securego/gosec@master
+        with:
+          args: '-fmt sarif -out gosec-results.sarif ./...'
+      
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: gosec-results.sarif
+
+  complexity:
+    name: Check code complexity
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: Install gocyclo
+        run: go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
+      
+      - name: Check cyclomatic complexity
+        run: |
+          $complex = gocyclo -over 15 .
+          if ($complex) {
+            Write-Host "::warning::Functions with high cyclomatic complexity (>15):"
+            $complex | ForEach-Object { Write-Host "::warning::$_" }
+          } else {
+            Write-Host "All functions have acceptable cyclomatic complexity"
+          }
+      
+      - name: Install gocognit
+        run: go install github.com/uudashr/gocognit/cmd/gocognit@latest
+      
+      - name: Check cognitive complexity
+        run: |
+          $cognitive = gocognit -over 20 .
+          if ($cognitive) {
+            Write-Host "::warning::Functions with high cognitive complexity (>20):"
+            $cognitive | ForEach-Object { Write-Host "::warning::$_" }
+          } else {
+            Write-Host "All functions have acceptable cognitive complexity"
+          }

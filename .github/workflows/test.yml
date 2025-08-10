@@ -63,8 +63,43 @@ jobs:
       with:
         go-version: '1.21'
     
-    - name: golangci-lint
-      uses: golangci/golangci-lint-action@v3
-      with:
-        version: latest
-        args: --timeout=5m
+    - name: Run gofmt
+      run: |
+        $output = gofmt -l .
+        if ($output) {
+          Write-Host "The following files need formatting:"
+          Write-Host $output
+          exit 1
+        }
+    
+    - name: Run go vet
+      run: go vet ./...
+    
+    - name: Install golangci-lint
+      run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+    
+    - name: Run golangci-lint
+      run: golangci-lint run --timeout=5m --config=.golangci.yml
+    
+    - name: Install gocyclo
+      run: go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
+    
+    - name: Check cyclomatic complexity
+      run: |
+        $output = gocyclo -over 15 .
+        if ($output) {
+          Write-Host "Functions with high cyclomatic complexity:"
+          Write-Host $output
+        }
+    
+    - name: Install ineffassign
+      run: go install github.com/gordonklaus/ineffassign@latest
+    
+    - name: Run ineffassign
+      run: ineffassign ./...
+    
+    - name: Install misspell
+      run: go install github.com/client9/misspell/cmd/misspell@latest
+    
+    - name: Run misspell
+      run: misspell -error .

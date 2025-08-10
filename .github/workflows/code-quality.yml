@@ -1,0 +1,151 @@
+name: Code Quality
+
+on:
+  schedule:
+    # Run every Monday at 00:00 UTC
+    - cron: "0 0 * * 1"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "**.go"
+      - "go.mod"
+      - "go.sum"
+
+jobs:
+  quality:
+    name: Code Quality Analysis
+    runs-on: windows-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
+          cache: true
+
+      - name: Install analysis tools
+        run: |
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+          go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
+          go install github.com/gordonklaus/ineffassign@latest
+          go install github.com/client9/misspell/cmd/misspell@latest
+          go install honnef.co/go/tools/cmd/staticcheck@latest
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
+
+      - name: Run comprehensive linting
+        run: |
+          Write-Host "=== Running golangci-lint ==="
+          golangci-lint run --timeout=10m --config=.golangci.yml --out-format=checkstyle > lint-results.xml
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "::warning::Linting found issues (see lint-results.xml)"
+          }
+
+      - name: Generate Go Report Card style analysis
+        run: |
+          Write-Host "=== Go Report Card Style Analysis ==="
+
+          # gofmt
+          Write-Host "`ngofmt check:"
+          $unformatted = gofmt -l .
+          if (-not $unformatted) {
+            Write-Host "100% - All files are properly formatted"
+          } else {
+            $total = (Get-ChildItem -Recurse -Filter "*.go" | Measure-Object).Count
+            $issues = ($unformatted | Measure-Object).Count
+            $score = [math]::Round((($total - $issues) / $total) * 100, 2)
+            Write-Host "$score% - $issues file(s) need formatting"
+          }
+
+          # go vet
+          Write-Host "`ngo vet check:"
+          go vet ./... 2>&1 | Out-String -Stream | Where-Object { $_ } | Set-Variable vetOutput
+          if (-not $vetOutput) {
+            Write-Host "100% - No issues found"
+          } else {
+            Write-Host "Issues found:"
+            $vetOutput | ForEach-Object { Write-Host "  $_" }
+          }
+
+          # gocyclo
+          Write-Host "`nCyclomatic complexity:"
+          $cyclo = gocyclo -over 15 .
+          if (-not $cyclo) {
+            Write-Host "100% - All functions have acceptable complexity (≤15)"
+          } else {
+            Write-Host "Functions with high complexity:"
+            $cyclo | ForEach-Object { Write-Host "  $_" }
+          }
+
+          # ineffassign
+          Write-Host "`nIneffective assignments:"
+          ineffassign ./... 2>&1 | Out-String -Stream | Where-Object { $_ } | Set-Variable ineffOutput
+          if (-not $ineffOutput) {
+            Write-Host "100% - No ineffective assignments found"
+          } else {
+            Write-Host "Issues found:"
+            $ineffOutput | ForEach-Object { Write-Host "  $_" }
+          }
+
+          # misspell
+          Write-Host "`nSpelling check:"
+          $misspellOutput = misspell .
+          if (-not $misspellOutput) {
+            Write-Host "100% - No spelling errors found"
+          } else {
+            Write-Host "Spelling errors found:"
+            $misspellOutput | ForEach-Object { Write-Host "  $_" }
+          }
+
+          Write-Host "`n=== Overall Grade ==="
+          if (-not $unformatted -and -not $vetOutput -and -not $cyclo -and -not $ineffOutput -and -not $misspellOutput) {
+            Write-Host "Grade: A+ - Excellent code quality!"
+          } elseif (-not $vetOutput -and -not $ineffOutput) {
+            Write-Host "Grade: A - Good code quality"
+          } else {
+            Write-Host "Grade: B - Room for improvement"
+          }
+
+      - name: Test coverage report
+        run: |
+          Write-Host "=== Test Coverage ==="
+          go test -v -short -coverprofile=coverage.out ./...
+          go tool cover -func=coverage.out | Select-String -Pattern "total:" | ForEach-Object {
+            $coverage = $_ -replace '.*\s+(\d+\.\d+)%.*', '$1'
+            Write-Host "Total coverage: $coverage%"
+            if ([double]$coverage -ge 80) {
+              Write-Host "Excellent coverage!"
+            } elseif ([double]$coverage -ge 60) {
+              Write-Host "Good coverage, but could be improved"
+            } else {
+              Write-Host "Coverage needs improvement"
+            }
+          }
+
+      - name: Upload lint results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lint-results
+          path: lint-results.xml
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage.out
+
+      - name: Comment PR with quality report
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            // Read analysis results and post as PR comment
+            // (Implementation would go here based on the analysis output)
