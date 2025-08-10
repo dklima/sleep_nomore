@@ -16,7 +16,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: '1.21'
           cache: true
       
       - name: golangci-lint
@@ -35,10 +35,17 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: '1.21'
       
+      - name: Normalize line endings
+        run: |
+          git config core.autocrlf false
+          git rm -rf --cached .
+          git add .
+          
       - name: Check gofmt
         run: |
+          gofmt -w .
           $unformatted = gofmt -l .
           if ($unformatted) {
             Write-Host "::error::The following files are not formatted:"
@@ -67,7 +74,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: '1.21'
       
       - name: Run go vet
         run: |
@@ -87,7 +94,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: '1.21'
       
       - name: Install staticcheck
         run: go install honnef.co/go/tools/cmd/staticcheck@latest
@@ -108,7 +115,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: '1.21'
       
       - name: Install gosec
         run: go install github.com/securego/gosec/v2/cmd/gosec@latest
@@ -138,7 +145,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: '1.21'
       
       - name: Install gocyclo
         run: go install github.com/fzipp/gocyclo/cmd/gocyclo@latest

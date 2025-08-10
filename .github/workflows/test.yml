@@ -11,7 +11,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        go-version: ['1.22', '1.24']
+        go-version: ['1.21', '1.22']
         arch: [amd64, arm64]
     
     steps:
@@ -78,8 +78,15 @@ jobs:
       with:
         go-version: '1.21'
     
+    - name: Normalize line endings
+      run: |
+        git config core.autocrlf false
+        git rm -rf --cached .
+        git add .
+        
     - name: Run gofmt
       run: |
+        gofmt -w .
         $output = gofmt -l .
         if ($output) {
           Write-Host "The following files need formatting:"
