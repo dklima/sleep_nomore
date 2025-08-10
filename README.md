@@ -29,23 +29,78 @@ A Windows application that keeps your computer awake by preventing it from enter
 3. Click the icon to toggle awake mode on/off
 4. Right-click to access the context menu
 
-## Building from Source
+## Development
 
 ### Prerequisites
 
 - Go 1.21 or higher
 
-### Windows
+### Building from Source
+
+#### Windows
 
 ```batch
 build.bat
 ```
 
-### Linux/Mac (cross-compile for Windows)
+#### Linux/Mac (cross-compile for Windows)
 
 ```bash
 chmod +x build.sh
 ./build.sh
+```
+
+### Local Quality Checks
+
+Before pushing code, run local quality checks to replicate the same checks performed in GitHub Actions:
+
+#### Full Check (Complete Analysis)
+
+```batch
+# Windows Bat
+check.bat
+
+# PowerShell (Windows/Linux/Mac)
+pwsh check.ps1
+```
+
+#### Quick Check (Fast Basic Validation)
+
+```batch
+# Windows Batch
+quick-check.bat
+
+# PowerShell with options
+pwsh check.ps1 -Quick          # Quick mode
+pwsh check.ps1 -Verbose        # Detailed output
+pwsh check.ps1 -NoColor        # No colors (CI-friendly)
+```
+
+The local checks include:
+
+- **Code formatting** (gofmt, goimports)
+- **Static analysis** (go vet, staticcheck)
+- **Linting** (golangci-lint with project config)
+- **Security scanning** (gosec)
+- **Test execution** with coverage reporting
+- **Code complexity** analysis (cyclomatic, cognitive)
+- **Build verification** (AMD64, ARM64)
+- **Dependency verification** (go mod verify/tidy)
+
+### Running Tests
+
+```batch
+# All tests with coverage
+go test -v -coverprofile=coverage.txt -covermode=atomic ./...
+
+# Quick tests only
+go test -short ./...
+
+# Integration tests (requires Windows and integration build tag)
+go test -tags=integration ./...
+
+# Benchmarks
+go test -bench=. -benchmem ./...
 ```
 
 ## Output Files
