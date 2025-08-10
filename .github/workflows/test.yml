@@ -11,7 +11,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        go-version: ['1.21', '1.22']
+        go-version: ['1.22', '1.24']
         arch: [amd64, arm64]
     
     steps:
@@ -54,7 +54,7 @@ jobs:
       run: go build -ldflags="-H windowsgui -s -w" -o sleepnomore_${{ matrix.arch }}.exe main.go
     
     - name: Upload coverage to Codecov
-      if: matrix.go-version == '1.21' && matrix.arch == 'amd64'
+      if: matrix.go-version == '1.22' && matrix.arch == 'amd64'
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
