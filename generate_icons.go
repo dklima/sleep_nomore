@@ -19,7 +19,7 @@ func main() {
 
 func generateIcon(filename string, c color.Color) {
 	img := image.NewRGBA(image.Rect(0, 0, 16, 16))
-	
+
 	for y := 0; y < 16; y++ {
 		for x := 0; x < 16; x++ {
 			dx := float64(x) - 7.5

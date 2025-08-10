@@ -1,3 +1,5 @@
+// Package main implements a Windows system tray application that prevents
+// the computer from entering sleep mode.
 package main
 
 import (
@@ -20,16 +22,22 @@ var (
 	setThreadExecState = kernel32.NewProc("SetThreadExecutionState")
 )
 
+// Windows API constants for SetThreadExecutionState
 const (
-	ES_CONTINUOUS       = 0x80000000
-	ES_SYSTEM_REQUIRED  = 0x00000001
+	// ES_CONTINUOUS - Informs the system that the state being set should remain in effect until
+	// the next call that uses ES_CONTINUOUS and one of the other state flags is cleared.
+	ES_CONTINUOUS = 0x80000000
+	// ES_SYSTEM_REQUIRED - Forces the system to be in the working state by resetting the system idle timer.
+	ES_SYSTEM_REQUIRED = 0x00000001
+	// ES_DISPLAY_REQUIRED - Forces the display to be on by resetting the display idle timer.
 	ES_DISPLAY_REQUIRED = 0x00000002
 )
 
+// App represents the main application state and UI elements.
 type App struct {
-	active     bool
-	menuToggle *systray.MenuItem
-	menuQuit   *systray.MenuItem
+	active     bool              // Current state of sleep prevention
+	menuToggle *systray.MenuItem // Menu item for toggling sleep prevention
+	menuQuit   *systray.MenuItem // Menu item for quitting the application
 }
 
 func main() {
@@ -76,7 +84,7 @@ func (app *App) onReady() {
 
 func (app *App) toggleActive(iconGreen, iconRed []byte) {
 	app.active = !app.active
-	
+
 	if app.active {
 		if err := preventSleep(); err != nil {
 			log.Printf("Error preventing sleep: %v", err)
