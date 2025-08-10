@@ -128,7 +128,7 @@ func allowSleep() error {
 
 func (app *App) onExit() {
 	if app.active {
-		allowSleep()
+		_ = allowSleep()
 	}
 }
 
