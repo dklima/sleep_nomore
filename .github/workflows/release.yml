@@ -1,0 +1,108 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21'
+    
+    - name: Get dependencies
+      run: go mod download
+    
+    - name: Run tests
+      run: go test -v -short ./...
+    
+    - name: Build AMD64
+      env:
+        GOOS: windows
+        GOARCH: amd64
+      run: go build -ldflags="-H windowsgui -s -w" -o sleepnomore_amd64.exe main.go
+    
+    - name: Build ARM64
+      env:
+        GOOS: windows
+        GOARCH: arm64
+      run: go build -ldflags="-H windowsgui -s -w" -o sleepnomore_arm64.exe main.go
+    
+    - name: Create checksums
+      run: |
+        certutil -hashfile sleepnomore_amd64.exe SHA256 > sleepnomore_amd64.exe.sha256
+        certutil -hashfile sleepnomore_arm64.exe SHA256 > sleepnomore_arm64.exe.sha256
+    
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+        body: |
+          # Sleep No More ${{ github.ref_name }}
+          
+          ## Downloads
+          - `sleepnomore_amd64.exe` - For Intel/AMD processors
+          - `sleepnomore_arm64.exe` - For ARM processors
+          
+          ## Installation
+          1. Download the appropriate executable for your system
+          2. Run the executable
+          3. The app will appear in your system tray
+          
+          ## Checksums
+          SHA256 checksums are provided for verification.
+    
+    - name: Upload AMD64 Binary
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./sleepnomore_amd64.exe
+        asset_name: sleepnomore_amd64.exe
+        asset_content_type: application/octet-stream
+    
+    - name: Upload ARM64 Binary
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./sleepnomore_arm64.exe
+        asset_name: sleepnomore_arm64.exe
+        asset_content_type: application/octet-stream
+    
+    - name: Upload AMD64 Checksum
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./sleepnomore_amd64.exe.sha256
+        asset_name: sleepnomore_amd64.exe.sha256
+        asset_content_type: text/plain
+    
+    - name: Upload ARM64 Checksum
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./sleepnomore_arm64.exe.sha256
+        asset_name: sleepnomore_arm64.exe.sha256
+        asset_content_type: text/plain
