@@ -98,6 +98,10 @@ jobs:
   security:
     name: Security scan with gosec
     runs-on: windows-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
     steps:
       - uses: actions/checkout@v4
       
@@ -123,6 +127,7 @@ jobs:
         if: always()
         with:
           sarif_file: gosec-results.sarif
+        continue-on-error: true
 
   complexity:
     name: Check code complexity
