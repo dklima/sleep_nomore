@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2025-01-11
+
+### Fixed
+- Fixed critical bug where system would not return to sleep mode after selecting "Disable" from the menu
+- Improved `allowSleep()` function to properly clear execution state using dual Windows API calls
+- Enhanced error handling with more descriptive error messages for sleep state operations
+
+### Technical Improvements
+- Added proper state reset using `SetThreadExecutionState(0)` after clearing continuous state
+- Fixed Go version compatibility in GitHub Actions workflows (1.24 → 1.21)
+- Added `.gitattributes` to enforce consistent line endings across development environments
+- Normalized line endings in CI/CD workflows to prevent formatting issues
+
 ## [1.0.0] - 2024-12-28
 
 ### Added
@@ -35,5 +48,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Windows 11
 - Windows Server 2019 or later
 
-[Unreleased]: https://github.com/yourusername/sleep-no-more/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/yourusername/sleep-no-more/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/yourusername/sleep-no-more/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/yourusername/sleep-no-more/releases/tag/v1.0.0
