@@ -4,6 +4,7 @@ package main
 
 import (
 	"embed"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -117,12 +118,21 @@ func preventSleep() error {
 }
 
 func allowSleep() error {
+	// Clear the previous state by calling ES_CONTINUOUS without any other flags
+	// This removes the ES_SYSTEM_REQUIRED and ES_DISPLAY_REQUIRED flags
 	ret, _, err := setThreadExecState.Call(
 		uintptr(ES_CONTINUOUS),
 	)
 	if ret == 0 {
-		return err
+		return fmt.Errorf("failed to clear execution state: %v", err)
 	}
+	
+	// Additionally, reset to default state (allow system to sleep)
+	ret, _, err = setThreadExecState.Call(0)
+	if ret == 0 {
+		return fmt.Errorf("failed to reset execution state: %v", err)
+	}
+	
 	return nil
 }
 
