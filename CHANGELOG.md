@@ -7,22 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.0.1] - 2025-01-11
+## [1.0.1] - 2025-08-11
 
 ### Fixed
+
 - Fixed critical bug where system would not return to sleep mode after selecting "Disable" from the menu
 - Improved `allowSleep()` function to properly clear execution state using dual Windows API calls
 - Enhanced error handling with more descriptive error messages for sleep state operations
 
 ### Technical Improvements
+
 - Added proper state reset using `SetThreadExecutionState(0)` after clearing continuous state
 - Fixed Go version compatibility in GitHub Actions workflows (1.24 → 1.21)
 - Added `.gitattributes` to enforce consistent line endings across development environments
 - Normalized line endings in CI/CD workflows to prevent formatting issues
 
-## [1.0.0] - 2024-12-28
+## [1.0.0] - 2025-08-09
 
 ### Added
+
 - Initial release of Sleep No More
 - System tray icon with visual status indicators (red when disabled, green when enabled)
 - Single-click toggle functionality to enable/disable awake mode
@@ -37,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - MIT License
 
 ### Technical Details
+
 - Written in Go 1.21
 - Uses `github.com/getlantern/systray` for system tray functionality
 - Single binary distribution with no external dependencies
@@ -44,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Windows GUI subsystem to prevent console window
 
 ### Platform Support
+
 - Windows 10 (version 1809 or later)
 - Windows 11
 - Windows Server 2019 or later
